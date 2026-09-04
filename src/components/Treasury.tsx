@@ -307,7 +307,7 @@ function PaymentForm({ students, actorName, initial, onSubmit, onCancel }: Payme
   const [tipo, setTipo] = useState(initial?.tipo ?? PAYMENT_TYPES[0]);
   const [periodicidade, setPeriodicidade] = useState(initial?.periodicidade ?? SEGURO_PERIODICIDADES[0]);
   const [antecipado, setAntecipado] = useState(initial?.antecipado ?? false);
-  const [selectedMonth, setSelectedMonth] = useState(initial?.competencia ?? '');
+  const [selectedMonth, setSelectedMonth] = useState(initial?.competencia ?? currentMonthLabel());
 
   const selectedStudent = students.find((s) => s.id === alunoId) ?? null;
   const studentCurso = selectedStudent?.curso ?? '';
@@ -421,7 +421,6 @@ function PaymentForm({ students, actorName, initial, onSubmit, onCancel }: Payme
           <>
             <FormField label="Competência (mês)" name="competencia">
               <select name="competencia" value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)}>
-                <option value="">{currentMonthLabel()}</option>
                 {MESES_ANO.map((m) => {
                   const year = new Date().getFullYear();
                   return <option key={m} value={`${m} ${year}`}>{m} {year}</option>;
@@ -442,7 +441,6 @@ function PaymentForm({ students, actorName, initial, onSubmit, onCancel }: Payme
           <>
             <FormField label="Competência (mês)" name="competencia">
               <select name="competencia" value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)}>
-                <option value="">{currentMonthLabel()}</option>
                 {MESES_ANO.map((m) => {
                   const year = new Date().getFullYear();
                   return <option key={m} value={`${m} ${year}`}>{m} {year}</option>;
@@ -463,7 +461,6 @@ function PaymentForm({ students, actorName, initial, onSubmit, onCancel }: Payme
             </FormField>
             <FormField label="Competência (mês)" name="competencia">
               <select name="competencia" value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)}>
-                <option value="">{currentMonthLabel()}</option>
                 {MESES_ANO.map((m) => {
                   const year = new Date().getFullYear();
                   return <option key={m} value={`${m} ${year}`}>{m} {year}</option>;

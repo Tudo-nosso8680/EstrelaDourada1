@@ -31,7 +31,8 @@ export function StudentProfile({ student, payments, onBack }: StudentProfileProp
 
   const totalPago = studentPayments.reduce((s, p) => s + Number(p.valor), 0);
   const dividaCount = monthStatuses.filter((m) => m.status === 'divida').length;
-  const pagoCount = monthStatuses.filter((m) => m.status === 'pago').length;
+  const pagoCount = monthStatuses.filter((m) => m.status === 'pago' || m.status === 'antecipado').length;
+  const antecipadoCount = monthStatuses.filter((m) => m.status === 'antecipado').length;
 
   return (
     <div className="student-profile-page">
@@ -67,6 +68,10 @@ export function StudentProfile({ student, payments, onBack }: StudentProfileProp
           <div className="hero-stat">
             <span>Meses pagos</span>
             <b className="green">{pagoCount}</b>
+          </div>
+          <div className="hero-stat">
+            <span>Antecipados</span>
+            <b className="blue">{antecipadoCount}</b>
           </div>
           <div className="hero-stat">
             <span>Meses em dívida</span>
@@ -183,6 +188,36 @@ export function StudentProfile({ student, payments, onBack }: StudentProfileProp
           </div>
           <PaymentMiniList payments={otherPayments} />
         </div>
+      </div>
+
+      {/* Complete payment history */}
+      <div className="profile-card full-width">
+        <div className="profile-card-header">
+          <FileText size={16} /> <h3>Histórico completo de pagamentos</h3>
+        </div>
+        {studentPayments.length === 0 ? (
+          <p className="detail-empty">Nenhum pagamento registado.</p>
+        ) : (
+          <div className="full-history-list">
+            {[...studentPayments]
+              .sort((a, b) => (b.data_pagamento ?? b.created_at).localeCompare(a.data_pagamento ?? a.created_at))
+              .map((p) => (
+                <div key={p.id} className="history-row">
+                  <div className="history-type">
+                    <span className={`history-badge ${p.tipo === 'Propina' ? 'green' : p.tipo === 'Uniforme' ? 'blue' : p.tipo === 'Cartão' ? 'gold' : p.tipo === 'Multa do mês' ? 'red' : p.tipo === 'Recurso' ? 'orange' : p.tipo === 'Taxa de Seguro' ? 'blue' : 'orange'}`}>{p.tipo}</span>
+                    {p.antecipado && <span className="antecipado-tag">Antecipado</span>}
+                  </div>
+                  <span className="history-competencia">{p.competencia}</span>
+                  {p.disciplina && <span className="history-disciplina">{p.disciplina}</span>}
+                  {p.periodicidade && <span className="history-periodicidade">{p.periodicidade}</span>}
+                  {p.periodo_cobertura && <span className="history-cobertura">{p.periodo_cobertura}</span>}
+                  <span className="history-data">{formatDate(p.data_pagamento)}</span>
+                  <b className="history-valor">{formatKz(Number(p.valor))}</b>
+                  <small className="history-recibo">{p.recibo}</small>
+                </div>
+              ))}
+          </div>
+        )}
       </div>
     </div>
   );

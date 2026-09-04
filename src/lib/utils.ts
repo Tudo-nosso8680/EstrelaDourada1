@@ -134,7 +134,11 @@ export function computeMonthStatuses(
   let y = entryYear;
   let m = entryMonth;
 
-  while (y < currentYear || (y === currentYear && m <= currentMonth)) {
+  // Extend through December of the current academic year so all months are visible
+  const endYear = currentYear;
+  const endMonth = 11; // December
+
+  while (y < endYear || (y === endYear && m <= endMonth)) {
     const label = monthLabel(y, m);
     const paid = paidMap.get(label);
     if (paid) {
@@ -142,6 +146,9 @@ export function computeMonthStatuses(
     } else if (debtMonths.has(label)) {
       result.push({ label, status: 'divida' });
     } else if (label === openMonthLabel) {
+      result.push({ label, status: 'aberto' });
+    } else if (y > currentYear || (y === currentYear && m > currentMonth)) {
+      // Future months beyond current — show as pending (not debt)
       result.push({ label, status: 'aberto' });
     } else if (today <= 10 && isPreviousMonth(y, m, currentYear, currentMonth)) {
       result.push({ label, status: 'aberto' });
