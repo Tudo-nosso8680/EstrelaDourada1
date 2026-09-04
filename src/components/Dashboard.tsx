@@ -1,12 +1,13 @@
-import { type ReactNode, useMemo } from 'react';
+import { type ReactNode, useMemo, useState } from 'react';
 import {
   ArrowUpRight, ClipboardList, CreditCard, FileText, Shirt,
   ChevronRight, CircleDollarSign, Users, ArrowDownLeft, Calendar,
-  AlertTriangle,
+  AlertTriangle, Printer,
 } from 'lucide-react';
 import type { Payment, FundRequest, AuditEntry, View, DailyHistoryEntry, Student } from '@/lib/types';
-import { formatKz, timeAgo, getInitials, formatDate, todayString, computeDebtStats } from '@/lib/utils';
+import { formatKz, timeAgo, getInitials, formatDate, todayString, computeDebtStats, computeDebtList, type DebtEntry } from '@/lib/utils';
 import { PageHeading } from '@/components/ui';
+import { Modal } from '@/components/Modal';
 
 type DashboardProps = {
   payments: Payment[];
@@ -20,6 +21,7 @@ type DashboardProps = {
 };
 
 export function Dashboard({ payments, fundRequests, audit, activeStudents, students, dailyHistory, onNavigate, onAddPayment }: DashboardProps) {
+  const [showDebtList, setShowDebtList] = useState(false);
   const today = todayString();
   const todayPayments = payments.filter((p) => (p.data_pagamento ?? p.created_at.slice(0, 10)).slice(0, 10) === today);
   const todayTotal = todayPayments.reduce((s, p) => s + Number(p.valor), 0);
@@ -32,6 +34,8 @@ export function Dashboard({ payments, fundRequests, audit, activeStudents, stude
   const pendingRequests = fundRequests.filter((r) => r.status === 'Pendente');
 
   const { debtors, monthsInDebt } = useMemo(() => computeDebtStats(students, payments), [students, payments]);
+  const debtList = useMemo(() => computeDebtList(students, payments), [students, payments]);
+  const totalDividaGeral = debtList.reduce((s, d) => s + d.valorDivida, 0);
 
   const todayLabel = new Date().toLocaleDateString('pt-PT', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
   const hour = new Date().getHours();
@@ -83,7 +87,7 @@ export function Dashboard({ payments, fundRequests, audit, activeStudents, stude
               <b className="green">{activeStudents - debtors}</b>
             </div>
           </div>
-          <div className="debtors-card">
+          <div className="debtors-card clickable" onClick={() => setShowDebtList(true)}>
             <div className="debtors-icon red"><AlertTriangle size={20} /></div>
             <div>
               <span>Alunos em dívida</span>
@@ -198,6 +202,53 @@ export function Dashboard({ payments, fundRequests, audit, activeStudents, stude
           ))}
         </div>
       </section>
+
+      {showDebtList && (
+        <Modal title="Alunos em Dívida" subtitle={`Ano letivo 2026/2027 · ${debtList.length} aluno(s) · ${formatKz(totalDividaGeral)} em dívida`} onClose={() => setShowDebtList(false)} size="lg">
+          <div className="debt-list-actions">
+            <button className="primary-button" onClick={() => window.print()}>
+              <Printer size={16} /> Imprimir Lista
+            </button>
+          </div>
+          <div className="debt-list-table" id="printable-debt-list">
+            <div className="print-only-header">
+              <h1>ESTRELA DOURADA DE BELAS</h1>
+              <h2>LISTA DE ALUNOS EM DÍVIDA</h2>
+              <p>Ano letivo 2026/2027</p>
+              <p>Data de emissão: {new Date().toLocaleDateString('pt-PT', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
+            </div>
+            {debtList.length === 0 ? (
+              <div className="empty-state">Nenhum aluno em dívida.</div>
+            ) : (
+              <div className="data-table">
+                <div className="table-head">
+                  <span>Nome</span><span>Matrícula</span><span>Classe</span><span>Curso</span><span>Meses em dívida</span><span>Valor em dívida</span><span>Contacto</span>
+                </div>
+                {debtList.map((d) => (
+                  <div className="table-row debt-table-row" key={d.id}>
+                    <span><b>{d.nome}</b></span>
+                    <span>{d.matricula}</span>
+                    <span>{d.classe}</span>
+                    <span>{d.curso}</span>
+                    <span className="debt-months-cell">{d.mesesDivida.join(', ')}</span>
+                    <span className="red"><b>{formatKz(d.valorDivida)}</b></span>
+                    <span>{d.telefone ?? '—'}</span>
+                  </div>
+                ))}
+                <div className="table-row debt-total-row">
+                  <span><b>TOTAL</b></span>
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                  <span>{monthsInDebt} meses</span>
+                  <span className="red"><b>{formatKz(totalDividaGeral)}</b></span>
+                  <span></span>
+                </div>
+              </div>
+            )}
+          </div>
+        </Modal>
+      )}
     </>
   );
 }

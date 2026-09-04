@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import {
   User, Calendar, Users, GraduationCap,
-  CheckCircle2, AlertTriangle, Clock, CreditCard, FileText,
+  CheckCircle2, AlertTriangle, Clock, CreditCard, FileText, Wallet,
   ArrowLeft, Phone, Mail, MapPin, IdCard,
 } from 'lucide-react';
 import type { Student, Payment } from '@/lib/types';
@@ -27,7 +27,8 @@ export function StudentProfile({ student, payments, onBack }: StudentProfileProp
   const multaPayments = studentPayments.filter((p) => p.tipo === 'Multa do mês');
   const recursoPayments = studentPayments.filter((p) => p.tipo === 'Recurso');
   const seguroPayments = studentPayments.filter((p) => p.tipo === 'Taxa de Seguro');
-  const otherPayments = studentPayments.filter((p) => !['Propina', 'Uniforme', 'Cartão', 'Folha de Provas', 'Multa do mês', 'Recurso', 'Taxa de Seguro'].includes(p.tipo));
+  const cotaPayments = studentPayments.filter((p) => p.tipo === 'Cota');
+  const otherPayments = studentPayments.filter((p) => !['Propina', 'Uniforme', 'Cartão', 'Folha de Provas', 'Multa do mês', 'Recurso', 'Taxa de Seguro', 'Cota'].includes(p.tipo));
 
   const totalPago = studentPayments.reduce((s, p) => s + Number(p.valor), 0);
   const dividaCount = monthStatuses.filter((m) => m.status === 'divida').length;
@@ -166,6 +167,12 @@ export function StudentProfile({ student, payments, onBack }: StudentProfileProp
         </div>
         <div className="profile-card">
           <div className="profile-card-header">
+            <Wallet size={16} /> <h3>Cotas</h3>
+          </div>
+          <PaymentMiniList payments={cotaPayments} />
+        </div>
+        <div className="profile-card">
+          <div className="profile-card-header">
             <CreditCard size={16} /> <h3>Uniformes</h3>
           </div>
           <PaymentMiniList payments={uniformePayments} />
@@ -204,7 +211,7 @@ export function StudentProfile({ student, payments, onBack }: StudentProfileProp
               .map((p) => (
                 <div key={p.id} className="history-row">
                   <div className="history-type">
-                    <span className={`history-badge ${p.tipo === 'Propina' ? 'green' : p.tipo === 'Uniforme' ? 'blue' : p.tipo === 'Cartão' ? 'gold' : p.tipo === 'Multa do mês' ? 'red' : p.tipo === 'Recurso' ? 'orange' : p.tipo === 'Taxa de Seguro' ? 'blue' : 'orange'}`}>{p.tipo}</span>
+                    <span className={`history-badge ${p.tipo === 'Propina' ? 'green' : p.tipo === 'Uniforme' ? 'blue' : p.tipo === 'Cartão' ? 'gold' : p.tipo === 'Multa do mês' ? 'red' : p.tipo === 'Recurso' ? 'orange' : p.tipo === 'Taxa de Seguro' ? 'blue' : p.tipo === 'Cota' ? 'green' : 'orange'}`}>{p.tipo}</span>
                     {p.antecipado && <span className="antecipado-tag">Antecipado</span>}
                   </div>
                   <span className="history-competencia">{p.competencia}</span>

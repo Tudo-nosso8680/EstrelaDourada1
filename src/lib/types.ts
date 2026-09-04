@@ -149,9 +149,9 @@ export type DailyHistoryEntry = {
 
 export type View = 'dashboard' | 'students' | 'treasury' | 'fundrequests' | 'faturas' | 'secretaria' | 'reports' | 'audit' | 'profile';
 
-export const PAYMENT_TYPES = ['Propina', 'Multa do mês', 'Recurso', 'Taxa de Seguro', 'Uniforme', 'Cartão', 'Folha de Provas', 'Matrícula', 'Confirmação', 'Certificado', 'Declaração', 'Curso Complementar'] as const;
+export const PAYMENT_TYPES = ['Propina', 'Multa do mês', 'Recurso', 'Taxa de Seguro', 'Cota', 'Uniforme', 'Cartão', 'Folha de Provas', 'Matrícula', 'Confirmação', 'Certificado', 'Declaração', 'Curso Complementar'] as const;
 export const PAYMENT_METHODS = ['Numerário', 'Transferência Bancária', 'Multicaixa', 'TPA', 'Depósito Bancário', 'Referência de Pagamento', 'Outro'] as const;
-export const PAYMENT_CATEGORIES = ['Propina', 'Multa', 'Recurso', 'Seguro', 'Matricula', 'Confirmacao', 'Certificado', 'Declaracao', 'Uniforme', 'Cartao', 'Folha', 'Curso', 'Outro'] as const;
+export const PAYMENT_CATEGORIES = ['Propina', 'Multa', 'Recurso', 'Seguro', 'Cota', 'Matricula', 'Confirmacao', 'Certificado', 'Declaracao', 'Uniforme', 'Cartao', 'Folha', 'Curso', 'Outro'] as const;
 
 export const SEGURO_PERIODICIDADES = ['Mensal', 'Trimestral', 'Anual'] as const;
 export const SEGURO_VALORES: Record<string, number> = {
@@ -208,7 +208,7 @@ export const CLASSES_BY_AREA: Record<string, string[]> = {
 export const CURSOS_BY_AREA: Record<string, string[]> = {
   'Ensino Primário': [],
   '1.º Ciclo Técnico Profissional': ['Electricidade de Baixa Tensão', 'Mecânica', 'Informática'],
-  'Médio Técnico de Saúde': ['Farmácia', 'Radiologia Médica', 'Nutrição e Dietética', 'Fisioterapia', 'Estomatologia'],
+  'Médio Técnico de Saúde': ['Farmácia', 'Radiologia Médica', 'Nutrição e Dietética', 'Fisioterapia', 'Estomatologia', 'Enfermagem', 'Análises Clínicas'],
   'Médio Técnico Industrial': [
     'Electricidade, Eléctrica e Telecomunicações',
     'Energia e Instalações Eléctricas',
@@ -228,5 +228,9 @@ export const CURSOS_BY_AREA: Record<string, string[]> = {
 };
 
 export const CURSOS_COMPLEMENTARES = ['Inglês', 'Natação', 'Caligrafia', 'Teatro', 'Dança', 'Religião'] as const;
+export const CURSOS_BY_CLASSE_EXTRA: Record<string, string[]> = {
+  '12ª Classe': ['Enfermagem', 'Análises Clínicas'],
+  '13ª Classe': ['Enfermagem', 'Análises Clínicas'],
+};
 
 export const STUDENT_STATUSES = ['Ativo', 'Inativo', 'Transferido', 'Concluído', 'Desistente', 'Suspenso'] as const;

@@ -1,7 +1,7 @@
 import { useMemo, useState, type FormEvent } from 'react';
 import { Pencil, Search, Trash2, User } from 'lucide-react';
 import type { Student } from '@/lib/types';
-import { TURNOS, AREAS_ENSINO, CLASSES_BY_AREA, CURSOS_BY_AREA, CURSOS_COMPLEMENTARES, STUDENT_STATUSES } from '@/lib/types';
+import { TURNOS, AREAS_ENSINO, CLASSES_BY_AREA, CURSOS_BY_AREA, CURSOS_COMPLEMENTARES, STUDENT_STATUSES, CURSOS_BY_CLASSE_EXTRA } from '@/lib/types';
 import { formatKz, getInitials, exportAttendanceList } from '@/lib/utils';
 import { PageHeading, EmptyState, FormField, FormActions } from '@/components/ui';
 import { Modal } from '@/components/Modal';
@@ -167,10 +167,16 @@ type StudentFormProps = {
 
 function StudentForm({ initial, onSubmit, onCancel }: StudentFormProps) {
   const [area, setArea] = useState(initial?.area_ensino ?? '');
+  const [classe, setClasse] = useState(initial?.classe ?? '');
   const [complementares, setComplementares] = useState<string[]>(initial?.cursos_complementares ?? []);
 
   const classesForArea = area ? CLASSES_BY_AREA[area] ?? [] : [];
-  const cursosForArea = area ? CURSOS_BY_AREA[area] ?? [] : [];
+  const cursosForArea = area ? [...(CURSOS_BY_AREA[area] ?? [])] : [];
+  if (area === 'Médio Técnico de Saúde' && classe && CURSOS_BY_CLASSE_EXTRA[classe]) {
+    for (const c of CURSOS_BY_CLASSE_EXTRA[classe]) {
+      if (!cursosForArea.includes(c)) cursosForArea.push(c);
+    }
+  }
 
   function toggleComplementar(nome: string) {
     setComplementares((cur) => cur.includes(nome) ? cur.filter((c) => c !== nome) : [...cur, nome]);
@@ -234,7 +240,7 @@ function StudentForm({ initial, onSubmit, onCancel }: StudentFormProps) {
           </select>
         </FormField>
         <FormField label="Classe" name="classe">
-          <select name="classe" defaultValue={initial?.classe ?? ''} disabled={!area}>
+          <select name="classe" value={classe} onChange={(e) => setClasse(e.target.value)} disabled={!area}>
             <option value="">{area ? 'Selecionar classe...' : 'Escolha a área primeiro'}</option>
             {classesForArea.map((c) => <option key={c} value={c}>{c}</option>)}
           </select>

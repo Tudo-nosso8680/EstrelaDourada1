@@ -10,7 +10,7 @@ import {
   SEGURO_PERIODICIDADES, SEGURO_VALORES,
   DISCIPLINAS_BY_CURSO, MESES_ANO,
 } from '@/lib/types';
-import { formatKz, formatDate, getInitials, currentMonthLabel, computeDebtMonths, currentOpenMonth, todayString } from '@/lib/utils';
+import { formatKz, formatDate, getInitials, currentMonthLabel, computeDebtMonths, currentOpenMonth, todayString, ANO_LETIVO_MESES } from '@/lib/utils';
 import { PageHeading, Badge, EmptyState, FormField, FormActions } from '@/components/ui';
 import { Modal } from '@/components/Modal';
 
@@ -38,11 +38,12 @@ export function Treasury({ payments, students, actorName, onAddPayment, onEditPa
     multa: payments.filter((p) => p.tipo === 'Multa do mês').reduce((s, p) => s + Number(p.valor), 0),
     recurso: payments.filter((p) => p.tipo === 'Recurso').reduce((s, p) => s + Number(p.valor), 0),
     seguro: payments.filter((p) => p.tipo === 'Taxa de Seguro').reduce((s, p) => s + Number(p.valor), 0),
+    cota: payments.filter((p) => p.tipo === 'Cota').reduce((s, p) => s + Number(p.valor), 0),
     uniforme: payments.filter((p) => p.tipo === 'Uniforme').reduce((s, p) => s + Number(p.valor), 0),
     cartao: payments.filter((p) => p.tipo === 'Cartão').reduce((s, p) => s + Number(p.valor), 0),
     folha: payments.filter((p) => p.tipo === 'Folha de Provas').reduce((s, p) => s + Number(p.valor), 0),
   }), [payments]);
-  const totalGeral = totals.propina + totals.multa + totals.recurso + totals.seguro + totals.uniforme + totals.cartao + totals.folha;
+  const totalGeral = totals.propina + totals.multa + totals.recurso + totals.seguro + totals.cota + totals.uniforme + totals.cartao + totals.folha;
 
   return (
     <>
@@ -60,6 +61,7 @@ export function Treasury({ payments, students, actorName, onAddPayment, onEditPa
           <RevenueCard icon={<Gavel size={18} />} label="Multas" value={formatKz(totals.multa)} tone="red" />
           <RevenueCard icon={<BookOpen size={18} />} label="Recursos" value={formatKz(totals.recurso)} tone="orange" />
           <RevenueCard icon={<Shield size={18} />} label="Seguros" value={formatKz(totals.seguro)} tone="blue" />
+          <RevenueCard icon={<Wallet size={18} />} label="Cotas" value={formatKz(totals.cota)} tone="green" />
           <RevenueCard icon={<Shirt size={18} />} label="Uniformes" value={formatKz(totals.uniforme)} tone="blue" />
           <RevenueCard icon={<CreditCard size={18} />} label="Cartões" value={formatKz(totals.cartao)} tone="gold" />
           <RevenueCard icon={<FileText size={18} />} label="Folhas de Provas" value={formatKz(totals.folha)} tone="orange" />
@@ -97,7 +99,7 @@ export function Treasury({ payments, students, actorName, onAddPayment, onEditPa
                   <span>{payment.aluno?.classe ?? ''} · {payment.aluno?.turma ?? ''}</span>
                 </div>
               </div>
-              <span><Badge label={payment.tipo} tone={payment.tipo === 'Propina' ? 'green' : payment.tipo === 'Uniforme' ? 'blue' : payment.tipo === 'Cartão' ? 'gold' : payment.tipo === 'Multa do mês' ? 'red' : payment.tipo === 'Recurso' ? 'orange' : payment.tipo === 'Taxa de Seguro' ? 'blue' : 'orange'} /></span>
+              <span><Badge label={payment.tipo} tone={payment.tipo === 'Propina' ? 'green' : payment.tipo === 'Uniforme' ? 'blue' : payment.tipo === 'Cartão' ? 'gold' : payment.tipo === 'Multa do mês' ? 'red' : payment.tipo === 'Recurso' ? 'orange' : payment.tipo === 'Taxa de Seguro' ? 'blue' : payment.tipo === 'Cota' ? 'green' : 'orange'} /></span>
               <span className="col-hide-mobile">{payment.competencia}</span>
               <span className="col-hide-mobile">{payment.metodo}</span>
               <span className="col-hide-mobile">{formatDate(payment.data_pagamento)}</span>
@@ -155,7 +157,7 @@ function StudentFinancialDetail({ student, payments }: { student: Student; payme
   const uniformePayments = payments.filter((p) => p.tipo === 'Uniforme');
   const cartaoPayments = payments.filter((p) => p.tipo === 'Cartão');
   const folhaPayments = payments.filter((p) => p.tipo === 'Folha de Provas');
-  const otherPayments = payments.filter((p) => !['Propina', 'Uniforme', 'Cartão', 'Folha de Provas', 'Multa do mês', 'Recurso', 'Taxa de Seguro'].includes(p.tipo));
+  const otherPayments = payments.filter((p) => !['Propina', 'Uniforme', 'Cartão', 'Folha de Provas', 'Multa do mês', 'Recurso', 'Taxa de Seguro', 'Cota'].includes(p.tipo));
 
   return (
     <div className="student-detail">
@@ -307,7 +309,7 @@ function PaymentForm({ students, actorName, initial, onSubmit, onCancel }: Payme
   const [tipo, setTipo] = useState(initial?.tipo ?? PAYMENT_TYPES[0]);
   const [periodicidade, setPeriodicidade] = useState(initial?.periodicidade ?? SEGURO_PERIODICIDADES[0]);
   const [antecipado, setAntecipado] = useState(initial?.antecipado ?? false);
-  const [selectedMonth, setSelectedMonth] = useState(initial?.competencia ?? currentMonthLabel());
+  const [selectedMonth, setSelectedMonth] = useState(initial?.competencia ?? ANO_LETIVO_MESES[0].label);
 
   const selectedStudent = students.find((s) => s.id === alunoId) ?? null;
   const studentCurso = selectedStudent?.curso ?? '';
@@ -421,9 +423,8 @@ function PaymentForm({ students, actorName, initial, onSubmit, onCancel }: Payme
           <>
             <FormField label="Competência (mês)" name="competencia">
               <select name="competencia" value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)}>
-                {MESES_ANO.map((m) => {
-                  const year = new Date().getFullYear();
-                  return <option key={m} value={`${m} ${year}`}>{m} {year}</option>;
+                {ANO_LETIVO_MESES.map((am) => {
+                  return <option key={am.label} value={am.label}>{am.label}</option>;
                 })}
               </select>
             </FormField>
@@ -441,9 +442,8 @@ function PaymentForm({ students, actorName, initial, onSubmit, onCancel }: Payme
           <>
             <FormField label="Competência (mês)" name="competencia">
               <select name="competencia" value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)}>
-                {MESES_ANO.map((m) => {
-                  const year = new Date().getFullYear();
-                  return <option key={m} value={`${m} ${year}`}>{m} {year}</option>;
+                {ANO_LETIVO_MESES.map((am) => {
+                  return <option key={am.label} value={am.label}>{am.label}</option>;
                 })}
               </select>
             </FormField>
@@ -461,9 +461,8 @@ function PaymentForm({ students, actorName, initial, onSubmit, onCancel }: Payme
             </FormField>
             <FormField label="Competência (mês)" name="competencia">
               <select name="competencia" value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)}>
-                {MESES_ANO.map((m) => {
-                  const year = new Date().getFullYear();
-                  return <option key={m} value={`${m} ${year}`}>{m} {year}</option>;
+                {ANO_LETIVO_MESES.map((am) => {
+                  return <option key={am.label} value={am.label}>{am.label}</option>;
                 })}
               </select>
             </FormField>
@@ -485,7 +484,13 @@ function PaymentForm({ students, actorName, initial, onSubmit, onCancel }: Payme
 
         {!['Propina', 'Multa do mês', 'Recurso', 'Taxa de Seguro'].includes(tipo) && (
           <>
-            <FormField label="Competência (mês)" name="competencia" placeholder={currentMonthLabel()} required defaultValue={initial?.competencia ?? currentMonthLabel()} />
+            <FormField label="Competência (mês)" name="competencia">
+              <select name="competencia" value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)}>
+                {ANO_LETIVO_MESES.map((am) => {
+                  return <option key={am.label} value={am.label}>{am.label}</option>;
+                })}
+              </select>
+            </FormField>
             <FormField label="Valor (KZ)" name="valor" type="number" placeholder="50000" required defaultValue={initial?.valor ? String(initial.valor) : ''} />
           </>
         )}

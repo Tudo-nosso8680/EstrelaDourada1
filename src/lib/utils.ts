@@ -102,9 +102,22 @@ export function computeDebtMonths(dataEntrada: string | null, paidMonths: Set<st
 }
 
 /**
- * Returns all months from the student's entry date to the current month,
- * with their payment status: 'pago' | 'aberto' | 'divida'.
+ * Academic year 2026/2027: September 2026 through June 2027.
+ * These are the 10 propina months every student must pay.
  */
+export const ANO_LETIVO_MESES: { label: string; year: number; month: number }[] = [
+  { label: 'Setembro 2026', year: 2026, month: 8 },
+  { label: 'Outubro 2026', year: 2026, month: 9 },
+  { label: 'Novembro 2026', year: 2026, month: 10 },
+  { label: 'Dezembro 2026', year: 2026, month: 11 },
+  { label: 'Janeiro 2027', year: 2027, month: 0 },
+  { label: 'Fevereiro 2027', year: 2027, month: 1 },
+  { label: 'Março 2027', year: 2027, month: 2 },
+  { label: 'Abril 2027', year: 2027, month: 3 },
+  { label: 'Maio 2027', year: 2027, month: 4 },
+  { label: 'Junho 2027', year: 2027, month: 5 },
+];
+
 export type MonthStatus = { label: string; status: 'pago' | 'aberto' | 'divida' | 'antecipado'; dataPagamento?: string | null };
 
 export function computeMonthStatuses(
@@ -123,23 +136,14 @@ export function computeMonthStatuses(
     paidMap.set(p.competencia, { dataPagamento: p.data_pagamento, antecipado: p.antecipado ?? false });
   }
 
-  const debtMonths = new Set(computeDebtMonths(dataEntrada, new Set(paidMap.keys())));
+  const paidLabels = new Set(paidMap.keys());
+  const debtMonths = new Set(computeDebtMonths(dataEntrada, paidLabels));
   const openMonthLabel = currentOpenMonth();
 
-  const entryDate = dataEntrada ? new Date(dataEntrada.length > 10 ? dataEntrada : `${dataEntrada}T12:00:00`) : null;
-  const entryYear = entryDate ? entryDate.getFullYear() : currentYear - 1;
-  const entryMonth = entryDate ? entryDate.getMonth() : 0;
-
   const result: MonthStatus[] = [];
-  let y = entryYear;
-  let m = entryMonth;
 
-  // Extend through December of the current academic year so all months are visible
-  const endYear = currentYear;
-  const endMonth = 11; // December
-
-  while (y < endYear || (y === endYear && m <= endMonth)) {
-    const label = monthLabel(y, m);
+  for (const am of ANO_LETIVO_MESES) {
+    const label = am.label;
     const paid = paidMap.get(label);
     if (paid) {
       result.push({ label, status: paid.antecipado ? 'antecipado' : 'pago', dataPagamento: paid.dataPagamento });
@@ -147,17 +151,13 @@ export function computeMonthStatuses(
       result.push({ label, status: 'divida' });
     } else if (label === openMonthLabel) {
       result.push({ label, status: 'aberto' });
-    } else if (y > currentYear || (y === currentYear && m > currentMonth)) {
-      // Future months beyond current — show as pending (not debt)
+    } else if (am.year > currentYear || (am.year === currentYear && am.month > currentMonth)) {
       result.push({ label, status: 'aberto' });
-    } else if (today <= 10 && isPreviousMonth(y, m, currentYear, currentMonth)) {
+    } else if (today <= 10 && isPreviousMonth(am.year, am.month, currentYear, currentMonth)) {
       result.push({ label, status: 'aberto' });
     } else {
       result.push({ label, status: 'aberto' });
     }
-
-    m++;
-    if (m > 11) { m = 0; y++; }
   }
 
   return result;
@@ -323,6 +323,45 @@ export function computeDebtStats(students: Student[], payments: Payment[]): { de
   }
 
   return { debtors, monthsInDebt };
+}
+
+export type DebtEntry = {
+  id: string;
+  nome: string;
+  matricula: string;
+  classe: string;
+  curso: string;
+  telefone: string | null;
+  mesesDivida: string[];
+  valorDivida: number;
+};
+
+/**
+ * Returns a detailed list of students who currently have unpaid months in debt,
+ * including which months are owed and the total monetary value of that debt.
+ */
+export function computeDebtList(students: Student[], payments: Payment[]): DebtEntry[] {
+  const result: DebtEntry[] = [];
+
+  for (const student of students) {
+    const propinaPayments = payments.filter((p) => p.aluno_id === student.id && p.tipo === 'Propina');
+    const paidMonths = new Set(propinaPayments.map((p) => p.competencia));
+    const debtMonths = computeDebtMonths(student.data_entrada, paidMonths);
+    if (debtMonths.length > 0) {
+      result.push({
+        id: student.id,
+        nome: student.nome,
+        matricula: student.matricula,
+        classe: student.classe,
+        curso: student.curso ?? '—',
+        telefone: student.telefone ?? student.enc_telefone ?? null,
+        mesesDivida: debtMonths,
+        valorDivida: debtMonths.length * Number(student.mensalidade),
+      });
+    }
+  }
+
+  return result.sort((a, b) => a.nome.localeCompare(b.nome, 'pt'));
 }
 
 /**

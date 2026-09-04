@@ -1022,6 +1022,8 @@ button { border: 0; cursor: pointer; }
   background: #fbfcfb; transition: all .2s;
 }
 .debtors-card:hover { border-color: var(--green); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+.debtors-card.clickable { cursor: pointer; }
+.debtors-card.clickable:hover { border-color: var(--red); box-shadow: 0 4px 14px rgba(192,57,43,0.1); transform: translateY(-1px); }
 .debtors-icon {
   width: 42px; height: 42px; border-radius: 10px;
   display: grid; place-items: center; flex-shrink: 0;
@@ -1503,4 +1505,47 @@ button { border: 0; cursor: pointer; }
   .profile-edit-grid { grid-template-columns: 1fr; }
   .hibernation-card { padding: 36px 28px; }
   .admin-gate-card { padding: 36px 24px 28px; border-radius: 20px; }
+}
+
+/* ===== Debt List Modal ===== */
+.print-only-header { display: none; }
+.debt-list-actions {
+  display: flex; justify-content: flex-end; padding: 0 0 16px;
+}
+.debt-list-actions .primary-button {
+  display: flex; align-items: center; gap: 8px; padding: 10px 20px;
+  border: none; border-radius: 8px; background: var(--green-dark); color: #fff;
+  font-size: 13px; font-weight: 700; cursor: pointer; transition: background 0.2s, transform 0.15s;
+}
+.debt-list-actions .primary-button:hover { background: var(--green); transform: translateY(-1px); }
+.debt-list-table { max-height: 60vh; overflow-y: auto; }
+.debt-table-row { flex-wrap: wrap; gap: 6px 16px; }
+.debt-months-cell { font-size: 11px; color: var(--ink-soft); flex-basis: 100%; }
+.debt-total-row { border-top: 2px solid var(--border); background: #f8faf8; font-weight: 700; }
+
+/* ===== Print: Debt List ===== */
+@media print {
+  body * { visibility: hidden !important; }
+  #printable-debt-list, #printable-debt-list * { visibility: visible !important; }
+  #printable-debt-list {
+    position: absolute; left: 0; top: 0; width: 100%;
+    max-height: none !important; overflow: visible !important;
+  }
+  .modal-backdrop { position: static !important; background: none !important; }
+  .modal { position: static !important; max-width: none !important; width: 100% !important; box-shadow: none !important; border: none !important; }
+  .modal-header, .debt-list-actions { display: none !important; }
+
+  .print-only-header { display: block !important; text-align: center; margin-bottom: 24px; }
+  .print-only-header h1 { font: 800 18px Manrope, sans-serif; margin: 0 0 4px; }
+  .print-only-header h2 { font: 700 14px Manrope, sans-serif; margin: 0 0 4px; }
+  .print-only-header p { font-size: 11px; color: #555; margin: 0; }
+
+  .debt-list-table .data-table { border: 1px solid #ccc; border-radius: 0; }
+  .debt-list-table .table-head {
+    background: #1A8F5F !important; color: #fff !important;
+    border-bottom: 2px solid #1A8F5F;
+  }
+  .debt-list-table .table-head span { color: #fff !important; font-weight: 700; }
+  .debt-list-table .table-row { border-bottom: 1px solid #ddd; page-break-inside: avoid; }
+  .debt-list-table .debt-months-cell { flex-basis: auto; }
 }
