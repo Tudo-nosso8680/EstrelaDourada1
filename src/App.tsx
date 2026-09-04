@@ -211,10 +211,11 @@ function App() {
     const { error } = await supabase.from('alunos').delete().eq('id', id);
     if (error) { showNotice('Erro ao eliminar aluno.'); return; }
     setStudents((cur) => cur.filter((s) => s.id !== id));
+    setPayments((cur) => cur.filter((p) => p.aluno_id !== id));
     await logAudit('Aluno eliminado', 'Aluno', `Aluno eliminado: ${student?.nome ?? id} (${student?.matricula ?? ''})`, actorName, student as unknown as Record<string, unknown> ?? null, null, id);
     await refreshAudit();
     showNotice('Aluno eliminado.');
-  }, [showNotice, students, refreshAudit, actorName]);
+  }, [showNotice, students, refreshAudit, actorName, setPayments]);
 
   // ===== Payment CRUD =====
   const addPayment = useCallback(async (data: { aluno_id: string; valor: number; competencia: string; metodo: string; tipo: string; data_pagamento: string; utilizador: string; disciplina?: string | null; periodicidade?: string | null; periodo_cobertura?: string | null; antecipado?: boolean }) => {
